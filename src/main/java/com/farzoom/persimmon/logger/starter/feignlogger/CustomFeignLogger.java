@@ -33,7 +33,7 @@ public class CustomFeignLogger extends Logger {
         Optional.ofNullable(request.headers().get(DEBUG_HEADER))
                 .ifPresent(value -> MDC.put(DEBUG_HEADER, value.stream().findAny().orElse("")));
         String logString = "\n>>>>> "
-                + request.protocolVersion() + ": " + request.httpMethod() +
+                + "HTTP/1.1" + ": " + request.httpMethod() +
                 "\n      URI: " + request.url() +
                 getBody(request);
         log.info(logString);
@@ -67,7 +67,7 @@ public class CustomFeignLogger extends Logger {
         String prettyJson = getPrettyJson(br);
         String body = getBody(prettyJson);
         String logString = "\n<<<<< "
-                + response.protocolVersion() +
+                + "HTTP/1.1" +
                 "\n      STATUS: " + response.status() + " " + response.reason() +
                 body;
 
@@ -78,7 +78,6 @@ public class CustomFeignLogger extends Logger {
                 .status(response.status())
                 .headers(response.headers())
                 .body(prettyJson, StandardCharsets.UTF_8)
-                .protocolVersion(response.protocolVersion())
                 .build();
     }
 
