@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
@@ -71,13 +72,14 @@ public class CustomFeignLogger extends Logger {
 
     @Override
     protected Response logAndRebufferResponse(String configKey, Level logLevel, Response response, long elapsedTime) throws IOException {
-        BufferedReader br = new BufferedReader(response.body().asReader(StandardCharsets.UTF_8));
+        BufferedReader br = new BufferedReader(getReader(response));
 
         String prettyJson = getPrettyJson(br);
         String body = getBody(prettyJson);
         String logString = DIRECTION_TO +
                 "HTTP/1.1" +
                 REQ_CODE + MDC.get(ID) +
+                URI + response.request().url() +
                 STATUS + response.status() + " " + response.reason() +
                 body;
 
@@ -89,6 +91,12 @@ public class CustomFeignLogger extends Logger {
                 .headers(response.headers())
                 .body(prettyJson, StandardCharsets.UTF_8)
                 .build();
+    }
+
+    @SneakyThrows
+    private Reader getReader(Response response) {
+        return response.body() != null ? new BufferedReader(response.body().asReader(StandardCharsets.UTF_8)) :
+                Reader.nullReader();
     }
 
     @SneakyThrows
