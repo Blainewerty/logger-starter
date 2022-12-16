@@ -42,8 +42,8 @@ public class CustomFeignLogger extends Logger {
                 .ifPresent(value -> MDC.put(DEBUG_HEADER, value.stream().findAny().orElse("")));
         String logString = DIRECTION_FROM +
                 "HTTP/1.1" + ": " + request.httpMethod() +
-                URI + request.url() +
                 REQ_CODE + MDC.get(ID) +
+                URI + request.url() +
                 getBody(request);
         log.info(logString);
     }
