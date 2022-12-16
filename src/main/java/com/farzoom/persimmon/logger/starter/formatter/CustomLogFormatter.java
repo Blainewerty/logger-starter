@@ -19,6 +19,13 @@ import java.util.Optional;
 @Component
 public class CustomLogFormatter implements HttpLogFormatter {
 
+    private static final String ID = "id";
+    private static final String URI = "\n      URI: ";
+    private static final String BODY = "\n      BODY: ";
+    private static final String STATUS = "\n      STATUS: ";
+    private static final String REQ_CODE = "\n      REQ_CODE: ";
+    private static final String DIRECTION_TO = "\n<<<<< ";
+    private static final String DIRECTION_FROM = "\n>>>>> ";
     private static final String DEBUG_HEADER = "far-debug";
 
     private final ObjectMapper mapper = new ObjectMapper();
@@ -27,9 +34,13 @@ public class CustomLogFormatter implements HttpLogFormatter {
     public String format(Precorrelation precorrelation, HttpRequest request) {
         Optional.ofNullable(request.getHeaders().get(DEBUG_HEADER))
                 .ifPresent(value -> MDC.put(DEBUG_HEADER, value.get(0)));
+        if (MDC.get(ID) == null) {
+            MDC.put(ID, precorrelation.getId());
+        }
         return direction(request)
                 + request.getProtocolVersion() + ": " + request.getMethod() +
-                "\n      URI: " + getHostPath(request) +
+                REQ_CODE + MDC.get(ID) +
+                URI + getHostPath(request) +
                 getBody(request);
     }
 
@@ -38,7 +49,7 @@ public class CustomLogFormatter implements HttpLogFormatter {
         Boolean isHeaderForDebug = getHeaderForDebug();
         return log.isDebugEnabled() ||
                 isHeaderForDebug ?
-                "\n      BODY: " + request.getBodyAsString() :
+                BODY + request.getBodyAsString() :
                 "";
     }
 
@@ -50,19 +61,20 @@ public class CustomLogFormatter implements HttpLogFormatter {
     public String format(Correlation correlation, HttpResponse response) {
         return direction(response)
                 + response.getProtocolVersion() +
-                "\n      STATUS: " + response.getStatus() + " " + response.getReasonPhrase() +
+                REQ_CODE + MDC.get(ID) +
+                STATUS + response.getStatus() + " " + response.getReasonPhrase() +
                 getBody(response);
     }
 
     private String direction(final HttpMessage request) {
-        return request.getOrigin() == Origin.REMOTE ? "\n<<<<< " : "\n>>>>> ";
+        return request.getOrigin() == Origin.REMOTE ? DIRECTION_TO : DIRECTION_FROM;
     }
 
     @SneakyThrows
     private String getBody(HttpResponse response) {
         Boolean isHeaderForDebug = getHeaderForDebug();
         return log.isDebugEnabled() || isHeaderForDebug ?
-                "\n      BODY: " + getPrettyJson(response.getBodyAsString()) :
+                BODY + getPrettyJson(response.getBodyAsString()) :
                 "";
     }
 

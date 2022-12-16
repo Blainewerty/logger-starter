@@ -20,6 +20,14 @@ import java.util.Optional;
 @Component
 public class CustomFeignLogger extends Logger {
 
+    private static final String ID = "id";
+    private static final String INDENT = "\n      ";
+    private static final String URI = INDENT + "URI: ";
+    private static final String BODY = INDENT + "BODY: ";
+    private static final String STATUS = INDENT + "STATUS: ";
+    private static final String REQ_CODE = INDENT + "REQ_CODE: ";
+    private static final String DIRECTION_TO = "\n<<<<< ";
+    private static final String DIRECTION_FROM = "\n>>>>> ";
     private static final String DEBUG_HEADER = "far-debug";
 
     private final ObjectMapper mapper = new ObjectMapper();
@@ -32,9 +40,10 @@ public class CustomFeignLogger extends Logger {
     protected void logRequest(String configKey, Level logLevel, Request request) {
         Optional.ofNullable(request.headers().get(DEBUG_HEADER))
                 .ifPresent(value -> MDC.put(DEBUG_HEADER, value.stream().findAny().orElse("")));
-        String logString = "\n>>>>> "
-                + "HTTP/1.1" + ": " + request.httpMethod() +
-                "\n      URI: " + request.url() +
+        String logString = DIRECTION_FROM +
+                "HTTP/1.1" + ": " + request.httpMethod() +
+                URI + request.url() +
+                REQ_CODE + MDC.get(ID) +
                 getBody(request);
         log.info(logString);
     }
@@ -44,7 +53,7 @@ public class CustomFeignLogger extends Logger {
         Boolean isHeaderForDebug = getHeaderForDebug();
         return log.isDebugEnabled() ||
                 isHeaderForDebug ?
-                "\n      BODY: " + getPrettyJson(request.body()) :
+                BODY + getPrettyJson(request.body()) :
                 "";
     }
 
@@ -66,9 +75,10 @@ public class CustomFeignLogger extends Logger {
 
         String prettyJson = getPrettyJson(br);
         String body = getBody(prettyJson);
-        String logString = "\n<<<<< "
-                + "HTTP/1.1" +
-                "\n      STATUS: " + response.status() + " " + response.reason() +
+        String logString = DIRECTION_TO +
+                "HTTP/1.1" +
+                REQ_CODE + MDC.get(ID) +
+                STATUS + response.status() + " " + response.reason() +
                 body;
 
         log.info(logString);
@@ -90,7 +100,7 @@ public class CustomFeignLogger extends Logger {
     private String getBody(String prettyJson) {
         Boolean isHeaderForDebug = getHeaderForDebug();
         return log.isDebugEnabled() || isHeaderForDebug ?
-                "\n      BODY: " + prettyJson :
+                BODY + prettyJson :
                 "";
     }
 }

@@ -22,8 +22,10 @@ public class LogbookConfiguration {
     public Logbook logbook() {
         return Logbook.builder()
                 .condition(exclude(
+                        requestTo("/swagger-resources/**"),
                         requestTo("/swagger-ui/**"),
                         requestTo("/actuator/**"),
+                        requestTo("/v2/**"),
                         requestTo("/v3/**")))
                 .sink(new DefaultSink(
                         logFormatter,
