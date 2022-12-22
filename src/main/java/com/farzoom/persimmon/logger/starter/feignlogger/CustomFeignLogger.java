@@ -1,9 +1,11 @@
 package com.farzoom.persimmon.logger.starter.feignlogger;
 
+import com.farzoom.persimmon.logger.starter.config.AppConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Logger;
 import feign.Request;
 import feign.Response;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -19,6 +21,7 @@ import java.util.Optional;
 @Slf4j
 @Primary
 @Component
+@RequiredArgsConstructor
 public class CustomFeignLogger extends Logger {
 
     private static final String ID = "id";
@@ -31,7 +34,9 @@ public class CustomFeignLogger extends Logger {
     private static final String DIRECTION_FROM = "\n>>>>> ";
     private static final String DEBUG_HEADER = "far-debug";
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final AppConfig config;
+    private final ObjectMapper mapper;
+
 
     @Override
     protected void log(String s, String s1, Object... objects) {
@@ -65,9 +70,11 @@ public class CustomFeignLogger extends Logger {
     }
 
     private Boolean getHeaderForDebug() {
-        return Optional.ofNullable(MDC.get(DEBUG_HEADER))
-                .map("true"::equals)
-                .orElse(false);
+        return config.isHeaderDebugOn() &&
+                Optional.ofNullable(MDC.get(DEBUG_HEADER))
+                        .map("true"::equals)
+                        .orElse(false);
+
     }
 
     @Override

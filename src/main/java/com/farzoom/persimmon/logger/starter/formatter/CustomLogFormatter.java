@@ -1,6 +1,8 @@
 package com.farzoom.persimmon.logger.starter.formatter;
 
+import com.farzoom.persimmon.logger.starter.config.AppConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -17,6 +19,7 @@ import java.util.Optional;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class CustomLogFormatter implements HttpLogFormatter {
 
     private static final String ID = "id";
@@ -28,7 +31,9 @@ public class CustomLogFormatter implements HttpLogFormatter {
     private static final String DIRECTION_FROM = "\n>>>>> ";
     private static final String DEBUG_HEADER = "far-debug";
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final AppConfig config;
+    private final ObjectMapper mapper;
+
 
     @Override
     public String format(Precorrelation precorrelation, HttpRequest request) {
@@ -84,8 +89,9 @@ public class CustomLogFormatter implements HttpLogFormatter {
     }
 
     private Boolean getHeaderForDebug() {
-        return Optional.ofNullable(MDC.get(DEBUG_HEADER))
-                .map("true"::equals)
-                .orElse(false);
+        return config.isHeaderDebugOn() &&
+                Optional.ofNullable(MDC.get(DEBUG_HEADER))
+                        .map("true"::equals)
+                        .orElse(false);
     }
 }
