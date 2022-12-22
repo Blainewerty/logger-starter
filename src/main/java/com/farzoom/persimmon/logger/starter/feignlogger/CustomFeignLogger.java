@@ -78,7 +78,7 @@ public class CustomFeignLogger extends Logger {
     }
 
     @Override
-    protected Response logAndRebufferResponse(String configKey, Level logLevel, Response response, long elapsedTime) throws IOException {
+    protected Response logAndRebufferResponse(String configKey, Level logLevel, Response response, long elapsedTime) {
         BufferedReader br = new BufferedReader(getReader(response));
 
         String prettyJson = getPrettyJson(br);
@@ -106,9 +106,13 @@ public class CustomFeignLogger extends Logger {
                 Reader.nullReader();
     }
 
-    @SneakyThrows
     private String getPrettyJson(BufferedReader bufferedReader) {
-        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(mapper.readTree(bufferedReader));
+        try {
+            return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(mapper.readTree(bufferedReader));
+        } catch (IOException e) {
+            log.error("Some problems with JSON parse");
+            return "";
+        }
     }
 
     @SneakyThrows
