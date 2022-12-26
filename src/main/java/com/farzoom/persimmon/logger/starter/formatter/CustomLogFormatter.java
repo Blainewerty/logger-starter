@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.zalando.logbook.Correlation;
 import org.zalando.logbook.HttpLogFormatter;
@@ -20,6 +21,7 @@ import java.util.Optional;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "farzoom.logger", name = "server.enable", havingValue = "true", matchIfMissing = true)
 public class CustomLogFormatter implements HttpLogFormatter {
 
     private static final String ID = "id";
@@ -33,7 +35,6 @@ public class CustomLogFormatter implements HttpLogFormatter {
 
     private final AppConfig config;
     private final ObjectMapper mapper;
-
 
     @Override
     public String format(Precorrelation precorrelation, HttpRequest request) {

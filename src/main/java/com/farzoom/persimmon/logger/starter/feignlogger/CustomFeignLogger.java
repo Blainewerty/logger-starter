@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
@@ -22,6 +23,7 @@ import java.util.Optional;
 @Primary
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "farzoom.logger", name = "feign.enable", havingValue = "true")
 public class CustomFeignLogger extends Logger {
 
     private static final String ID = "id";
@@ -36,7 +38,6 @@ public class CustomFeignLogger extends Logger {
 
     private final AppConfig config;
     private final ObjectMapper mapper;
-
 
     @Override
     protected void log(String s, String s1, Object... objects) {
@@ -56,9 +57,7 @@ public class CustomFeignLogger extends Logger {
 
     @SneakyThrows
     private String getBody(Request request) {
-        Boolean isHeaderForDebug = getHeaderForDebug();
-        return log.isDebugEnabled() ||
-                isHeaderForDebug ?
+        return needForBody() ?
                 BODY + getPrettyJson(request.body()) :
                 "";
     }
@@ -69,35 +68,32 @@ public class CustomFeignLogger extends Logger {
         return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(mapper.readTree(body));
     }
 
-    private Boolean getHeaderForDebug() {
-        return config.isHeaderDebugOn() &&
-                Optional.ofNullable(MDC.get(DEBUG_HEADER))
-                        .map("true"::equals)
-                        .orElse(false);
-
-    }
-
     @Override
     protected Response logAndRebufferResponse(String configKey, Level logLevel, Response response, long elapsedTime) {
-        BufferedReader br = new BufferedReader(getReader(response));
-
-        String prettyJson = getPrettyJson(br);
-        String body = getBody(prettyJson);
         String logString = DIRECTION_TO +
                 "HTTP/1.1" +
                 REQ_CODE + MDC.get(ID) +
                 URI + response.request().url() +
-                STATUS + response.status() + " " + response.reason() +
-                body;
+                STATUS + response.status() + " " + response.reason();
 
-        log.info(logString);
-        return Response.builder()
-                .request(response.request())
-                .reason(response.reason())
-                .status(response.status())
-                .headers(response.headers())
-                .body(prettyJson, StandardCharsets.UTF_8)
-                .build();
+        if (needForBody()) {
+            BufferedReader br = new BufferedReader(getReader(response));
+
+            String prettyJson = getPrettyJson(br);
+            String body = getBody(prettyJson);
+
+            log.info(logString + body);
+            return Response.builder()
+                    .request(response.request())
+                    .reason(response.reason())
+                    .status(response.status())
+                    .headers(response.headers())
+                    .body(prettyJson, StandardCharsets.UTF_8)
+                    .build();
+        } else {
+            log.info(logString);
+            return response;
+        }
     }
 
     @SneakyThrows
@@ -117,9 +113,20 @@ public class CustomFeignLogger extends Logger {
 
     @SneakyThrows
     private String getBody(String prettyJson) {
-        Boolean isHeaderForDebug = getHeaderForDebug();
-        return log.isDebugEnabled() || isHeaderForDebug ?
+        return needForBody() ?
                 BODY + prettyJson :
                 "";
+    }
+
+    private boolean needForBody() {
+        return log.isDebugEnabled() || getHeaderForDebug();
+    }
+
+    private Boolean getHeaderForDebug() {
+        return config.isHeaderDebugOn() &&
+                Optional.ofNullable(MDC.get(DEBUG_HEADER))
+                        .map("true"::equals)
+                        .orElse(false);
+
     }
 }

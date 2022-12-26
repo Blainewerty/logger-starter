@@ -1,6 +1,7 @@
 package com.farzoom.persimmon.logger.starter.formatter;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.zalando.logbook.Correlation;
 import org.zalando.logbook.HttpLogWriter;
@@ -10,6 +11,7 @@ import java.io.IOException;
 
 @Slf4j
 @Component
+@ConditionalOnProperty(prefix = "farzoom.logger", name = "server.enable", havingValue = "true", matchIfMissing = true)
 public class CustomLogWriter implements HttpLogWriter {
 
     @Override

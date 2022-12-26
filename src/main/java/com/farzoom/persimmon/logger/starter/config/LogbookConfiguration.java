@@ -3,6 +3,7 @@ package com.farzoom.persimmon.logger.starter.config;
 import com.farzoom.persimmon.logger.starter.formatter.CustomLogFormatter;
 import com.farzoom.persimmon.logger.starter.formatter.CustomLogWriter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.zalando.logbook.DefaultSink;
@@ -13,6 +14,7 @@ import static org.zalando.logbook.Conditions.requestTo;
 
 @Configuration
 @RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "farzoom.logger", name = "server.enable", havingValue = "true", matchIfMissing = true)
 public class LogbookConfiguration {
 
     private final CustomLogWriter logWriter;
@@ -34,3 +36,5 @@ public class LogbookConfiguration {
                 .build();
     }
 }
+
+
