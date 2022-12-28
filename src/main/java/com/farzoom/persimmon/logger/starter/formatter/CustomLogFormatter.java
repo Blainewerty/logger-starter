@@ -55,7 +55,7 @@ public class CustomLogFormatter implements HttpLogFormatter {
         Boolean isHeaderForDebug = getHeaderForDebug();
         return log.isDebugEnabled() ||
                 isHeaderForDebug ?
-                BODY + request.getBodyAsString() :
+                BODY + getPrettyJson(request.getBodyAsString()) :
                 "";
     }
 
