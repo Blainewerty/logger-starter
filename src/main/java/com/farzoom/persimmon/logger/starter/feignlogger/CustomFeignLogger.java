@@ -76,7 +76,7 @@ public class CustomFeignLogger extends Logger {
                 URI + response.request().url() +
                 STATUS + response.status() + " " + response.reason();
 
-        if (needForBody()) {
+        if (needForBody() && response.body().length() != null) {
             BufferedReader br = new BufferedReader(getReader(response));
 
             String prettyJson = getPrettyJson(br);
