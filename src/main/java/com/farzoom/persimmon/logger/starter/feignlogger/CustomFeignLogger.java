@@ -14,7 +14,9 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
@@ -76,24 +78,33 @@ public class CustomFeignLogger extends Logger {
                 URI + response.request().url() +
                 STATUS + response.status() + " " + response.reason();
 
-        if (needForBody() && response.reason() != null) {
+        if (needForBody()) {
             BufferedReader br = new BufferedReader(getReader(response));
 
             String prettyJson = getPrettyJson(br);
             String body = getBody(prettyJson);
-
             log.info(logString + body);
+
+            InputStream inputStream = getInputStream(prettyJson);
             return Response.builder()
                     .request(response.request())
                     .reason(response.reason())
                     .status(response.status())
                     .headers(response.headers())
-                    .body(prettyJson, StandardCharsets.UTF_8)
+                    .body(inputStream, Optional.ofNullable(response.body())
+                            .map(Response.Body::length)
+                            .orElse(0))
                     .build();
         } else {
             log.info(logString);
             return response;
         }
+    }
+
+    private InputStream getInputStream(String prettyJson) {
+        return "null".equals(prettyJson) ?
+                InputStream.nullInputStream() :
+                new ByteArrayInputStream(prettyJson.getBytes());
     }
 
     @SneakyThrows
