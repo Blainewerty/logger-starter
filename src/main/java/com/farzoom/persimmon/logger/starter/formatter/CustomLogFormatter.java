@@ -25,10 +25,12 @@ import java.util.Optional;
 public class CustomLogFormatter implements HttpLogFormatter {
 
     private static final String ID = "id";
-    private static final String URI = "\n      URI: ";
-    private static final String BODY = "\n      BODY: ";
-    private static final String STATUS = "\n      STATUS: ";
-    private static final String REQ_CODE = "\n      REQ_CODE: ";
+    private static final String INDENT = "\n      ";
+    private static final String URI = INDENT + "URI: ";
+    private static final String HEADERS = INDENT + "HEADERS: ";
+    private static final String BODY = INDENT + "BODY: ";
+    private static final String STATUS = INDENT + "STATUS: ";
+    private static final String REQ_CODE = INDENT + "REQ_CODE: ";
     private static final String DIRECTION_TO = "\n<<<<< ";
     private static final String DIRECTION_FROM = "\n>>>>> ";
     private static final String DEBUG_HEADER = "far-debug";
@@ -46,6 +48,7 @@ public class CustomLogFormatter implements HttpLogFormatter {
         return direction(request)
                 + request.getProtocolVersion() + ": " + request.getMethod() +
                 REQ_CODE + MDC.get(ID) +
+                HEADERS + request.getHeaders() +
                 URI + getHostPath(request) +
                 getBody(request);
     }
@@ -68,6 +71,7 @@ public class CustomLogFormatter implements HttpLogFormatter {
         return direction(response)
                 + response.getProtocolVersion() +
                 REQ_CODE + MDC.get(ID) +
+                HEADERS + response.getHeaders() +
                 STATUS + response.getStatus() + " " + response.getReasonPhrase() +
                 getBody(response);
     }

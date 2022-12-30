@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
@@ -25,12 +25,13 @@ import java.util.Optional;
 @Primary
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(prefix = "farzoom.logger", name = "feign.enable", havingValue = "true")
+@ConditionalOnExpression("${farzoom.logger.feign.enable:true} and '${feign.client.config.default.loggerLevel}'.equals('BASIC')")
 public class CustomFeignLogger extends Logger {
 
     private static final String ID = "id";
     private static final String INDENT = "\n      ";
     private static final String URI = INDENT + "URI: ";
+    private static final String HEADERS = INDENT + "HEADERS: ";
     private static final String BODY = INDENT + "BODY: ";
     private static final String STATUS = INDENT + "STATUS: ";
     private static final String REQ_CODE = INDENT + "REQ_CODE: ";
@@ -52,6 +53,7 @@ public class CustomFeignLogger extends Logger {
         String logString = DIRECTION_FROM +
                 "HTTP/1.1" + ": " + request.httpMethod() +
                 REQ_CODE + MDC.get(ID) +
+                HEADERS + request.headers() +
                 URI + request.url() +
                 getBody(request);
         log.info(logString);
@@ -75,6 +77,7 @@ public class CustomFeignLogger extends Logger {
         String logString = DIRECTION_TO +
                 "HTTP/1.1" +
                 REQ_CODE + MDC.get(ID) +
+                HEADERS + response.headers() +
                 URI + response.request().url() +
                 STATUS + response.status() + " " + response.reason();
 
